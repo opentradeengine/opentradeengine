@@ -29,9 +29,11 @@ $register->insertMember("seller", "Joe", "Smithie", "12-12-1992", "999-888-9999"
 $buyOrder = new Order($price = 0.05, $quantity = 1000, $setType = 1, $side = 'Buy', $owner = 4, $symbol = "EXAMPLE");
 $sellOrder = new Order(0.05, 1000, 1, 'Sell', 5, $symbol = "EXAMPLE");
 
-$engine = new Engine($symbol = "EXAMPLE", $leftSymbol = "USD", $rightSymbol = "BTC", $feePercentage = 0.01); //TO DO: fetch from database
+//TO DO: fetch config for a symbol: symbol, symbolID, leftCurrencyID, $rightCurrencyID, $feePercentage
+
+$engine = new Engine($symbol = "EXAMPLE", $leftCurrency = 1, $rightCurrency = 2, $feePercentage = 0.01);
 $engine->addOrder($buyOrder); //executes or adds order depending on orders already in it
-$engine->addOrder($sellOrder);
+$engine->addOrder($sellOrder); // TO DO: Abstract both books or inherit from one orderbook class
 
 //use trader object to retrieve trader information
 $buyer = new Trader();

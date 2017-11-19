@@ -250,16 +250,6 @@ CREATE TABLE `OrderErrors` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `OrderErrors`
---
-
-LOCK TABLES `OrderErrors` WRITE;
-/*!40000 ALTER TABLE `OrderErrors` DISABLE KEYS */;
-INSERT INTO `OrderErrors` VALUES (1,'2017-10-21 19:53:40','Exception: Could not add sell order in /Users/Hamza/PhpstormProjects/opentradeengine/engine/orderBookBuy.php:298\nStack trace:\n#0 /Users/Hamza/PhpstormProjects/opentradeengine/engine/orderBook.php(80): OrderBookBuy->addOrder(Object(Order))\n#1 /Users/Hamza/');
-/*!40000 ALTER TABLE `OrderErrors` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `Symbols`
 --
 

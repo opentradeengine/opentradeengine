@@ -32,8 +32,8 @@ class orderBook {
         $this->feePercentage = $setFeePercentage;
         
         //Setup both sides of the order book
-        $this->buys = new OrderBookBuy($this->symbol, $this->symbolLeft, $this->symbolRight);
-        $this->sells = new OrderBookSell($this->symbol, $this->symbolLeft, $this->symbolRight);  
+        $this->buys = new OrderBookBuy($this->symbol, $this->symbolLeft, $this->symbolRight, $this->feePercentage, "Buy");
+        $this->sells = new OrderBookSell($this->symbol, $this->symbolLeft, $this->symbolRight, $this->feePercentage, "Sell");
         
         //call set volume from db method
         $this->volume= $this->setVolume();
