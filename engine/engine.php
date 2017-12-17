@@ -1,6 +1,6 @@
 <?php
 /**
- * Processes trades using the orderbook sub classes.
+ * Processes trades using the orderbook sub class.
  *
  * Open Trade Engine
  */
@@ -16,9 +16,9 @@ class Engine
     private $orderBook;
     
     //create orderbook using provided symbols
-    public function __construct($symbol, $leftSymbol, $rightSymbol, $feePercentage)
+    public function __construct($symbolID)
     {
-        $this->orderBook = new orderBook($symbol, $leftSymbol, $rightSymbol, $feePercentage);
+        $this->orderBook = new orderBook($symbolID);
     }
 
     //adds an order
@@ -28,9 +28,9 @@ class Engine
     }
     
     //cancels an order
-    public function cancelOrder($traderID, $orderID, $symbol, $side, $book)
+    public function cancelOrder($order)
     {
-        $this->orderBook->cancelOrder($traderID, $orderID, $side, $book);
+        $this->orderBook->cancelOrder($order);
     }
     
     //return the top orders for the orderbook by price
@@ -47,7 +47,7 @@ class Engine
     //calculate daily change in price for the symbol
     public function getDailyChange()
     {
-        if ($this->orderBook->get24HourPrice() >= 0.00000001)
+        if($this->orderBook->get24HourPrice() >= 0.00000001)
         {
             $lastTrade = $this->orderBook->getLastTrade();
             return 100 * ($lastTrade - $this->orderBook->get24HourPrice()) / $lastTrade;
@@ -57,25 +57,25 @@ class Engine
     }
     
     //get 24 hour high
-    function get24HourHigh($symbol)
+    function get24HourHigh()
     {
          return $this->orderBook->get24HourHigh();
     }
     
     //get 24 hour low
-    function get24HourLow($symbol)
+    function get24HourLow()
     {
         $this->orderBook->get24HourLow();
     }
     
     //get lowest sell
-    function lowestSell($symbol)
+    function getLowestSell()
     {
         $this->orderBook->getLow();
     }
     
     //get highest buy in orderbook
-    function highestBuy($symbol)
+    function getHighestBuy()
     {
         $this->orderBook->getHigh();
     }
@@ -105,9 +105,9 @@ class Engine
     }
     
     //get n completed trades
-    function marketTrades($number)
+    function getMarketTrades($number)
     {
-         return $this->orderBookDGCBTC->getTrades($number);
+         return $this->orderBook->getTrades($number);
     }
     
     //get user active orders
@@ -123,14 +123,14 @@ class Engine
     }
     
     //get sell total
-    function sellTotal($symbol)
+    function getSellTotal()
     {
-        return $this->orderBook->sellTotal($symbol);
+        return $this->orderBook->sellTotal();
     }
     
     //get sell total
-    function buyTotal($symbol)
+    function getBuyTotal()
     {
-        $this->orderBook->buyTotal($symbol);
+        $this->orderBook->buyTotal();
     }
 }

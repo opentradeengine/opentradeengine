@@ -9,16 +9,17 @@ class Order
 {
     private $price;
     private $quantity;
-    private $type; // there can be three types, 1, 2 and 3
+    private $type;
     private $side;
     private $owner;
     private $ID;
     private $TS;
     private $symbol;
     private $tempQuantity;
+    private $feePercent;
     
     //Constructor
-    function __construct($setPrice, $setQuantity, $setType, $setSide, $setOwner, $setSymbol) 
+    function __construct($setPrice, $setQuantity, $setType, $setSide, $setOwner, $setSymbol, $setFeePercent)
     {
        $this->price = $setPrice;
        $this->quantity = $setQuantity;
@@ -26,19 +27,13 @@ class Order
        $this->side = $setSide;
        $this->owner = $setOwner;
        $this->symbol = $setSymbol;
+       $this->feePercent= $setFeePercent;
     }
     
     //getters 
     function getFee()
     {
-        if($this->side == "Sell")
-        {
-            return $this->quantity * 0.0015;
-        }
-        else if($this->side == "Buy")
-        {
-            return $this->price * $this->quantity * 0.0015;
-        }
+        return $this->feePercent;
     }
     
     function getID()
@@ -58,17 +53,7 @@ class Order
     
     function getTempQuantity()
     {
-         //setup the connection
-         $connection = connectionFactory::getConnection();
-        
-         //update trade balances in database
-         $result= $connection->query("SELECT * FROM $this->symbol".$this->side."s WHERE ID=" .$this->ID);
-         
-         $order= mysqli_fetch_array($result);
-         
-         $tempQuantity = $order["TempQuantity"];
-         
-         return $tempQuantity;
+         return $this->tempQuantity;
     }
     
     function getTempTotal()
@@ -125,12 +110,6 @@ class Order
     function setTempQuantity($newQuantity)
     {
          $this->tempQuantity = $newQuantity;
-         
-         //setup the connection
-         $connection = connectionFactory::getConnection();
-        
-         //update trade balances in database
-         mysqli_query($connection,"UPDATE $this->symbol".$this->side."s SET TempQuantity=" .$newQuantity. " WHERE ID=" .$this->ID);
     }
     
     function setTimestamp($newTS)

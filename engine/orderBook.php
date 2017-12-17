@@ -5,38 +5,46 @@
  * Open Trade Engine
  */
 require_once("connectionFactory.php");
-include ("tradeComplete.php");
+require_once("tradeComplete.php");
+require_once("symbolManager.php");
 
 class orderBook {
     
     //Variables: buys and sells represent orderBookBuy and orderBookSell
+    private $symbolID;
     private $symbol;
-    private $symbolLeft;
-    private $symbolRight;
+    private $currencyLeft;
+    private $currencyRight;
     private $sells;
     private $buys;
-    private $feePercentage;
+    private $makerFee;
+    private $takerFee;
     private $lastTrade;
     private $lastSellFee;
     private $lastBuyFee;
     private $lastRightTotal;
     private $lastLeftTotal;
     private $volume;
-   
-    //Constructor for setting the orderbook symbol and order array size
-    function __construct($setSymbol, $setSymbolLeft, $setSymbolRight, $setFeePercentage) 
+
+    function __construct($setSymbolID)
     {
-        $this->symbol = $setSymbol;
-        $this->symbolLeft = $setSymbolLeft;
-        $this->symbolRight = $setSymbolRight;
-        $this->feePercentage = $setFeePercentage;
+        $this->symbolID = $setSymbolID;
+
+        //initialize from symbol configuration
+        $symbolManager = new SymbolManager();
+        $symbolConfig = $symbolManager->getSymbolConfig($this->symbolID);
+        $this->symbol = $symbolConfig['symbol'];
+        $this->currencyLeft = $symbolConfig['currencyLeft'];
+        $this->currencyRight = $symbolConfig['currencyRight'];
+        $this->makerFee = $symbolConfig['makerFee'];
+        $this->takerFee = $symbolConfig['takerFee'];;
         
-        //Setup both sides of the order book
-        $this->buys = new OrderBookBuy($this->symbol, $this->symbolLeft, $this->symbolRight, $this->feePercentage, "Buy");
-        $this->sells = new OrderBookSell($this->symbol, $this->symbolLeft, $this->symbolRight, $this->feePercentage, "Sell");
+        //setup both sides of the order book
+        $this->buys = new OrderBookBuy($this->symbol, "Buy", $this->currencyRight, $this->makerFee);
+        $this->sells = new OrderBookSell($this->symbol, "Sell", $this->currencyLeft, $this->makerFee);
         
         //call set volume from db method
-        $this->volume= $this->setVolume();
+        $this->volume = $this->setVolume();
     }
     
     //Executes an order by determining it's type and matching it with
@@ -350,15 +358,15 @@ class orderBook {
     }
     
     //cancels an order by ID
-    function cancelOrder($traderID, $orderID, $side, $book)
+    function cancelOrder($order)
     {
-        if ($book == "Sell")
+        if($order->getSide() == "Sell")
         {
-            $this->sells->cancelOrder($orderID, $traderID);
+            $this->sells->cancelOrder($order);
         }
-        else if ($book == "Buy")
+        else if($order->getSide() == "Buy")
         {
-            $this->buys->cancelOrder($orderID, $traderID);
+            $this->buys->cancelOrder($order);
         }
     }
     
@@ -411,9 +419,9 @@ class orderBook {
                 //COMMIT CHANGES TO DATABASE
                 
                 //variables needed for queries
-                $symbolRight = $this->symbolRight;
-                $symbolLeft = $this->symbolLeft;
-                $held = $this->symbolLeft."Held";
+                $currencyRight = $this->currencyRight;
+                $currencyLeft = $this->currencyLeft;
+                $held = $this->currencyLeft."Held";
                 
                 $connection = connectionFactory::getConnection();
                 
@@ -424,18 +432,18 @@ class orderBook {
                     
                     //update buyer by lowering his balance directly
                     $query1 = $connection->query("UPDATE `Traders` SET 
-                        `$symbolRight"."Balance`=`$symbolRight"."Balance` - $rightSideBuyerTotal 
-                            WHERE `ID`=".$buyer->getID()." AND `$symbolRight"."Balance` >= $rightSideBuyerTotal");
+                        `$currencyRight"."Balance`=`$currencyRight"."Balance` - $rightSideBuyerTotal 
+                            WHERE `ID`=".$buyer->getID()." AND `$currencyRight"."Balance` >= $rightSideBuyerTotal");
                     $countQuery1 = $connection->affected_rows;
                     
-                    $query2 = $connection->query("UPDATE `Traders` SET `$symbolLeft"."Balance`=`$symbolLeft"."Balance` + $Quantity WHERE `ID`=" .$buyer->getID());  
+                    $query2 = $connection->query("UPDATE `Traders` SET `$currencyLeft"."Balance`=`$currencyLeft"."Balance` + $Quantity WHERE `ID`=" .$buyer->getID());  
                     $countQuery2 = $connection->affected_rows;
                     
                     //update seller by lowering his held balance of left side, and increasing actual balance of right 
                     $query3 = $connection->query("UPDATE `Traders` SET `$held`=(`$held`-$tradeAmount) WHERE `ID`=".$seller->getID()." AND $held >= $tradeAmount");
                     $countQuery3 = $connection->affected_rows;
                     
-                    $query4 = $connection->query("UPDATE `Traders` SET `$symbolRight"."Balance`=`$symbolRight"."Balance` + $rightSideBuyerCost 
+                    $query4 = $connection->query("UPDATE `Traders` SET `$currencyRight"."Balance`=`$currencyRight"."Balance` + $rightSideBuyerCost 
                         WHERE `ID`=" .$seller->getID());  
                     $countQuery4 = $connection->affected_rows;
 
@@ -454,19 +462,19 @@ class orderBook {
                     }
 
                     //update fee totals for fees charged on right and left
-                    $connection->query("UPDATE `FeeTotals` SET `Total`=`Total`+ $leftSideFee WHERE `Currency` = '$this->symbolLeft'");
-                    $connection->query("UPDATE `FeeTotals` SET `Total`=`Total`+ $rightSideFee WHERE `Currency` = '$this->symbolRight'");        
+                    $connection->query("UPDATE `FeeTotals` SET `Total`=`Total`+ $leftSideFee WHERE `Currency` = '$this->currencyLeft'");
+                    $connection->query("UPDATE `FeeTotals` SET `Total`=`Total`+ $rightSideFee WHERE `Currency` = '$this->currencyRight'");        
 
                     //update buyer's and seller's completed trades in the currency
-                    $connection->query("UPDATE `Traders` SET `$symbolLeft"."Complete` = `$symbolLeft"."Complete` + $Quantity WHERE `ID`=" .$buyer->getID());
-                    $connection->query("UPDATE `Traders` SET `$symbolLeft"."Complete` = `$symbolLeft"."Complete` + $Quantity WHERE `ID`=" .$seller->getID());
+                    $connection->query("UPDATE `Traders` SET `$currencyLeft"."Complete` = `$currencyLeft"."Complete` + $Quantity WHERE `ID`=" .$buyer->getID());
+                    $connection->query("UPDATE `Traders` SET `$currencyLeft"."Complete` = `$currencyLeft"."Complete` + $Quantity WHERE `ID`=" .$seller->getID());
 
                      //give the buyer and his referrer points if the currency bought with is equal to USD or BTC 
-                     if($this->symbolRight == "USD" || $this->symbolRight == "BTC")
+                     if($this->currencyRight == "USD" || $this->currencyRight == "BTC")
                      {
                          $points = $rightSideFee * 10;
 
-                         if($this->symbolRight == "BTC")
+                         if($this->currencyRight == "BTC")
                          {
                              $points = $points * 500;
                          }
@@ -537,7 +545,7 @@ class orderBook {
                 $this->lastRightTotal = $rightSideCost;
                 $this->lastLeftTotal = $Quantity;
                 
-                $held = $this->symbolRight."Held";
+                $held = $this->currencyRight."Held";
                 
                 //COMMIT CHANGES TO DATABASE
                 $connection = connectionFactory::getConnection();
@@ -552,16 +560,16 @@ class orderBook {
                         WHERE `ID`=".$buyer->getID()." AND `$held` >= $tradeAmount");
                     $countQuery1 = $connection->affected_rows;
                     
-                    $query2 = $connection->query("UPDATE `Traders` SET `".$this->symbolLeft."Balance`=`".$this->symbolLeft."Balance` + $Quantity 
+                    $query2 = $connection->query("UPDATE `Traders` SET `".$this->currencyLeft."Balance`=`".$this->currencyLeft."Balance` + $Quantity 
                         WHERE `ID`=" .$buyer->getID());
                     $countQuery2 = $connection->affected_rows;
                     
                     //update seller lowering left side and adding to right side
-                    $query3 = $connection->query("UPDATE `Traders` SET `".$this->symbolLeft."Balance`=`".$this->symbolLeft."Balance` - $sellerAdustment 
-                        WHERE `ID`=".$seller->getID()." AND `".$this->symbolLeft."Balance` >= $sellerAdustment");
+                    $query3 = $connection->query("UPDATE `Traders` SET `".$this->currencyLeft."Balance`=`".$this->currencyLeft."Balance` - $sellerAdustment 
+                        WHERE `ID`=".$seller->getID()." AND `".$this->currencyLeft."Balance` >= $sellerAdustment");
                     $countQuery3 = $connection->affected_rows;
                     
-                    $query4 = $connection->query("UPDATE `Traders` SET `".$this->symbolRight."Balance`=`".$this->symbolRight."Balance` + $rightSideCost 
+                    $query4 = $connection->query("UPDATE `Traders` SET `".$this->currencyRight."Balance`=`".$this->currencyRight."Balance` + $rightSideCost 
                         WHERE `ID`=" .$seller->getID());        
                     $countQuery4 = $connection->affected_rows;
                     
@@ -579,19 +587,19 @@ class orderBook {
                     }
                 
                     //update fee totals for fees charged on right and left
-                    $connection->query("UPDATE `FeeTotals` SET `Total`=`Total`+ $leftSideFee WHERE `Currency` = '$this->symbolLeft'");
-                    $connection->query("UPDATE `FeeTotals` SET `Total`=`Total`+ $rightSideFee WHERE `Currency` = '$this->symbolRight'");        
+                    $connection->query("UPDATE `FeeTotals` SET `Total`=`Total`+ $leftSideFee WHERE `Currency` = '$this->currencyLeft'");
+                    $connection->query("UPDATE `FeeTotals` SET `Total`=`Total`+ $rightSideFee WHERE `Currency` = '$this->currencyRight'");        
 
                     //update buyer's and seller's completed trades in the currency
-                    $connection->query("UPDATE `Traders` SET `$this->symbolLeft"."Complete` = `$this->symbolLeft"."Complete` + $Quantity WHERE `ID`=" .$buyer->getID());
-                    $connection->query("UPDATE `Traders` SET `$this->symbolLeft"."Complete` = `$this->symbolLeft"."Complete` + $Quantity WHERE `ID`=" .$seller->getID());
+                    $connection->query("UPDATE `Traders` SET `$this->currencyLeft"."Complete` = `$this->currencyLeft"."Complete` + $Quantity WHERE `ID`=" .$buyer->getID());
+                    $connection->query("UPDATE `Traders` SET `$this->currencyLeft"."Complete` = `$this->currencyLeft"."Complete` + $Quantity WHERE `ID`=" .$seller->getID());
 
                      //give the buyer and his referrer points if the currency bought with is equal to USD or BTC 
-                     if($this->symbolRight == "USD" || $this->symbolRight == "BTC")
+                     if($this->currencyRight == "USD" || $this->currencyRight == "BTC")
                      {
                          $points = $rightSideFee * 10;
 
-                         if($this->symbolRight == "BTC")
+                         if($this->currencyRight == "BTC")
                          {
                              $points = $points * 500;
                          }
@@ -624,16 +632,12 @@ class orderBook {
         $connection = connectionFactory::getConnection();
         $result = $connection->query("SELECT SUM(Quantity) AS Volume FROM `".$this->symbol."Trades` WHERE `ts` >= DATE_SUB(NOW(), INTERVAL 1 DAY)"); 
     
-        if ($result)
-        {   
-            // get association
+        if($result) {
             $row = mysqli_fetch_assoc($result);
             
-            return $row['Volume'];
+            $this->volume = $row['Volume'];
             
-        } 
-        else if (!$result)
-        {
+        } else if(!$result) {
             return;
         }
     }

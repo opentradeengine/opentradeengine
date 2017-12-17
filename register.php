@@ -4,7 +4,7 @@
  *
  * Open Trade Engine
  */
-require('engine/helper.php');
+require('engine/symbolManager.php');
 class Register
 {
     private function encrypt($password)

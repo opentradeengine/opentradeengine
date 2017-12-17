@@ -56,10 +56,9 @@ CREATE TABLE `EXAMPLEBuys` (
   `Price` decimal(16,8) unsigned NOT NULL,
   `Quantity` decimal(16,8) unsigned NOT NULL,
   `Type` varchar(10) NOT NULL,
-  `Side` varchar(4) NOT NULL,
   `Owner` int(11) NOT NULL,
   `Symbol` int(11) NOT NULL,
-  `TempQuantity` decimal(16,8) unsigned NOT NULL,
+  `FeePercent` decimal(6,3) NOT NULL DEFAULT '0.000',
   PRIMARY KEY (`ID`),
   KEY `EXAMPLEBuys_Traders_ID_fk` (`Owner`),
   KEY `EXAMPLEBuys_Symbols_ID_fk` (`Symbol`),
@@ -67,15 +66,6 @@ CREATE TABLE `EXAMPLEBuys` (
   CONSTRAINT `EXAMPLEBuys_Traders_ID_fk` FOREIGN KEY (`owner`) REFERENCES `Traders` (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `EXAMPLEBuys`
---
-
-LOCK TABLES `EXAMPLEBuys` WRITE;
-/*!40000 ALTER TABLE `EXAMPLEBuys` DISABLE KEYS */;
-/*!40000 ALTER TABLE `EXAMPLEBuys` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `EXAMPLESells`
@@ -90,10 +80,9 @@ CREATE TABLE `EXAMPLESells` (
   `Price` decimal(16,8) unsigned NOT NULL,
   `Quantity` decimal(16,8) unsigned NOT NULL,
   `Type` varchar(10) NOT NULL,
-  `Side` varchar(4) NOT NULL,
   `Owner` int(11) NOT NULL,
   `Symbol` int(11) NOT NULL,
-  `TempQuantity` decimal(16,8) unsigned NOT NULL,
+  `FeePercent` decimal(6,3) NOT NULL DEFAULT '0.000',
   PRIMARY KEY (`ID`),
   KEY `EXAMPLESells_Traders_ID_fk` (`Owner`),
   KEY `EXAMPLESells_Symbols_ID_fk` (`Symbol`),
@@ -101,15 +90,6 @@ CREATE TABLE `EXAMPLESells` (
   CONSTRAINT `EXAMPLESells_Traders_ID_fk` FOREIGN KEY (`owner`) REFERENCES `Traders` (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `EXAMPLESells`
---
-
-LOCK TABLES `EXAMPLESells` WRITE;
-/*!40000 ALTER TABLE `EXAMPLESells` DISABLE KEYS */;
-/*!40000 ALTER TABLE `EXAMPLESells` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `EXAMPLETrades`
@@ -137,15 +117,6 @@ CREATE TABLE `EXAMPLETrades` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `EXAMPLETrades`
---
-
-LOCK TABLES `EXAMPLETrades` WRITE;
-/*!40000 ALTER TABLE `EXAMPLETrades` DISABLE KEYS */;
-/*!40000 ALTER TABLE `EXAMPLETrades` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `EXAMPLETransactions`
 --
 
@@ -167,15 +138,6 @@ CREATE TABLE `EXAMPLETransactions` (
   CONSTRAINT `EXAMPLETransactions_Traders_ID_fk` FOREIGN KEY (`SenderID`) REFERENCES `Traders` (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `EXAMPLETransactions`
---
-
-LOCK TABLES `EXAMPLETransactions` WRITE;
-/*!40000 ALTER TABLE `EXAMPLETransactions` DISABLE KEYS */;
-/*!40000 ALTER TABLE `EXAMPLETransactions` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `EXAMPLEWithdrawals`
@@ -201,15 +163,6 @@ CREATE TABLE `EXAMPLEWithdrawals` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `EXAMPLEWithdrawals`
---
-
-LOCK TABLES `EXAMPLEWithdrawals` WRITE;
-/*!40000 ALTER TABLE `EXAMPLEWithdrawals` DISABLE KEYS */;
-/*!40000 ALTER TABLE `EXAMPLEWithdrawals` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `FeeTotals`
 --
 
@@ -226,15 +179,6 @@ CREATE TABLE `FeeTotals` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `FeeTotals`
---
-
-LOCK TABLES `FeeTotals` WRITE;
-/*!40000 ALTER TABLE `FeeTotals` DISABLE KEYS */;
-/*!40000 ALTER TABLE `FeeTotals` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `OrderErrors`
 --
 
@@ -246,7 +190,7 @@ CREATE TABLE `OrderErrors` (
   `TS` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `Error` varchar(255) NOT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -261,7 +205,8 @@ CREATE TABLE `Symbols` (
   `Symbol` char(20) NOT NULL,
   `LeftCurrency` int(11) NOT NULL,
   `RightCurrency` int(11) NOT NULL,
-  `Fee` decimal(16,8) NOT NULL DEFAULT '0.00000000',
+  `MakerFee` decimal(16,8) NOT NULL DEFAULT '0.00000000',
+  `TakerFee` decimal(16,8) NOT NULL DEFAULT '0.00000000',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `Symbols_ID_uindex` (`ID`),
   UNIQUE KEY `Symbols_code_uindex` (`Symbol`),
@@ -278,7 +223,7 @@ CREATE TABLE `Symbols` (
 
 LOCK TABLES `Symbols` WRITE;
 /*!40000 ALTER TABLE `Symbols` DISABLE KEYS */;
-INSERT INTO `Symbols` VALUES (1,'EXAMPLE',1,2,0.01000000);
+INSERT INTO `Symbols` VALUES (1,'EXAMPLE',1,2,0.01000000,0.00000000);
 /*!40000 ALTER TABLE `Symbols` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -302,15 +247,6 @@ CREATE TABLE `TraderCurrencies` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `TraderCurrencies`
---
-
-LOCK TABLES `TraderCurrencies` WRITE;
-/*!40000 ALTER TABLE `TraderCurrencies` DISABLE KEYS */;
-INSERT INTO `TraderCurrencies` VALUES (1,10000.00000000,4,0.00000000,0.00000000),(1,10000.00000000,5,0.00000000,0.00000000),(2,10000.00000000,4,0.00000000,0.00000000),(2,10000.00000000,5,0.00000000,0.00000000);
-/*!40000 ALTER TABLE `TraderCurrencies` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `Traders`
@@ -386,14 +322,6 @@ CREATE TABLE `WithdrawErrors` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `WithdrawErrors`
---
-
-LOCK TABLES `WithdrawErrors` WRITE;
-/*!40000 ALTER TABLE `WithdrawErrors` DISABLE KEYS */;
-/*!40000 ALTER TABLE `WithdrawErrors` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -404,4 +332,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-10-21 17:56:18
+-- Dump completed on 2017-12-17 16:21:24
