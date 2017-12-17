@@ -15,3 +15,9 @@ Example code available in examples.php.
 This is an extremely early beta. WORK IN PROGRESS. NOT GUARANTEED IN ANY WAY. Functionality could change and/or be broken at any moment.
 
 Feel free to contribute and use the code in any way as long as you follow MIT license.
+
+Donations:
+BTC: 1BRjX3V5VeVotnx1APjSrLMqg7d3r7LzQX
+ETH: 0x103f81Cbc6170525F03f4b9563331f5218c65C67
+DGC: DL9Zmy79k1xxXfLyRKnW4MSfa7X48NGibt
+SRC: sfT3XqCS9wEkPkNwiwTfJ9MhBvpj2ci3Q5
