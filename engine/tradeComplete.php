@@ -22,7 +22,7 @@ class Trade
     private $type;
     
     //Constructor
-    function __construct($setID, $setTS, $setPrice, $setQuantity, $setType, $setSide, $setOwner, $setactingTrader, $setBuyFee, $setSellFee, $setRightTotal, $setLeftTotal) 
+    function __construct($setID, $setTS, $setPrice, $setQuantity, $setType, $setSide, $setOwner, $setActingTrader, $setBuyFee, $setSellFee, $setRightTotal, $setLeftTotal)
     {
        $this->ID= $setID;
        $this->TS = $setTS;
@@ -31,7 +31,7 @@ class Trade
        $this->type = $setType;
        $this->side = $setSide;
        $this->owner = $setOwner;
-       $this->actingTrader = $setactingTrader;
+       $this->actingTrader = $setActingTrader;
        $this->buyFee= $setBuyFee;
        $this->sellFee=$setSellFee;
        $this->rightTotal = $setRightTotal;

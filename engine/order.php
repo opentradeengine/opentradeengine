@@ -93,17 +93,22 @@ class Order
         return $total;
     }
 
+    //updates quantity in database as well as in object
+    function updateQuantity($newQuantity) {
+        //setup the connection
+        $connection = connectionFactory::getConnection();
+
+        //update trade balances in database
+        $connection->query("UPDATE `$this->symbol".$this->side."s` SET `Quantity`=" .$newQuantity. " WHERE `ID`=" .$this->ID);
+
+        $this->setQuantity($newQuantity);
+    }
+
     //setters
     //sets quantity in database and object, internal use only
     function setQuantity($newQuantity)
     {
         $this->quantity = $newQuantity;
-        
-        //setup the connection
-        $connection = connectionFactory::getConnection();
-        
-        //update trade balances in database
-        mysqli_query($connection,"UPDATE $this->symbol".$this->side."s SET Quantity=" .$newQuantity. " WHERE ID=" .$this->ID);
     }
     
     //sets a temporary quantity for use in displaying a combined order, internal use only
@@ -111,7 +116,8 @@ class Order
     {
          $this->tempQuantity = $newQuantity;
     }
-    
+
+    //submission timestamp
     function setTimestamp($newTS)
     {
         $this->TS = $newTS;

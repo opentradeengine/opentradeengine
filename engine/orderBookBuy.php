@@ -39,11 +39,7 @@ class OrderBookBuy extends OrderBookBase {
             }
         }
     }
-    
-    //1. Adds the order to the database, ID is auto-assigned by auto-increment.
-    //orders are deleted when canceled and the ID increment is not reset
-    //2. Executed orders are moved to the trades table which
-    //gives them their final ID in the OrderBook class(combines buy and sell)
+
     function addOrder($order) {
         $price = $order->getPrice();
         $quantity= $order->getQuantity();
@@ -60,8 +56,8 @@ class OrderBookBuy extends OrderBookBase {
               VALUES($price, $quantity, '$type', '$owner', '".$this->symbol."')");
 
          //hold the buyer's right balance
-        $update = $connection->query("UPDATE `TraderCurrencies` SET `HeldBalance`=(`HeldBalance`+$rightTotal), `Balance`=(`Balance`-$rightTotal) WHERE `Trader`=".$order->getOwner()
-            ." AND `Currency`= ".$this->currencyRight." AND `Balance` >= $rightTotal");
+        $update = $connection->query("UPDATE `TraderCurrencies` SET `HeldBalance`=(`HeldBalance`+$rightTotal),"
+            ." `Balance`=(`Balance`-$rightTotal) WHERE `Trader`=".$order->getOwner() ." AND `Currency`= ".$this->currencyRight." AND `Balance` >= $rightTotal");
         $countUpdate = $connection->affected_rows;
 
         //commit transaction if all criteria pass
